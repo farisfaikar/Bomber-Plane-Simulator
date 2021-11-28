@@ -45,17 +45,10 @@ class Button:
             self.button_color = self.BUTTON_COLOR
 
     def button_action(self):
-        # self.play_button_pressed()
-        pass
-
-    @staticmethod
-    def play_button_pressed():
-        # button_pressed = mixer.Sound('sound/button_pressed.ogg')
-        # button_pressed.play()
         pass
 
 
-class PlayPauseButton(Button):
+class StartButton(Button):
     def button_action(self):
         print("Simulation Plays")
         timer.Timer.start_timer()
@@ -64,5 +57,4 @@ class PlayPauseButton(Button):
 class ResetButton(Button):
     def button_action(self):
         print("Reset Simulation")
-        # Trying pause button
         timer.Timer.reset_timer()

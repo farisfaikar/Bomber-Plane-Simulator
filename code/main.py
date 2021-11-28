@@ -8,6 +8,7 @@ import ui
 import trajectory
 import slider
 import button
+import ruler
 from timer import Timer
 
 
@@ -32,36 +33,38 @@ class Program:
     def __init__(self):
         self.ui_lines = ui.UILines()
         self.plane_trajectory = trajectory.PlaneTrajectory()
+        self.bomb_trajectory = trajectory.BombTrajectory()
 
         self.velocity_slider = slider.VelocitySlider((110, 440), 180, cfg.GREEN, cfg.L_GREEN)
         self.angle_slider = slider.AngleSlider((310, 440), 180, cfg.GREEN, cfg.L_GREEN)
         self.bomb_height_slider = slider.BombHeightSlider((510, 440), 180, cfg.GREEN, cfg.L_GREEN)
 
-        # Experimental instances
-        self.bomb_trajectory = trajectory.BombTrajectory()
-
         self.bomb_coords_text = text.Text(110, 470)
         self.plane_coords_text = text.Text(110, 450)
         self.time_text = text.Text(410, 450)
 
-        self.play_pause_button = button.PlayPauseButton("Start", 80, 30, (10, 410), cfg.L_GREEN)
+        self.start_button = button.StartButton("Start", 80, 30, (10, 410), cfg.L_GREEN)
         self.reset_button = button.ResetButton("Reset", 80, 30, (10, 460), cfg.L_GREEN)
+
+        self.vertical_ruler = ruler.VerticalRuler((0, 300), 4, 1000, 4000, 300)
+        self.horizontal_ruler = ruler.HorizontalRuler((0, 400), 9, 0, 8000, 800)
+
+        # Experimental instances
 
     def run(self):
         Timer.count_up()
 
-        # self.input_text.draw(screen)
         self.ui_lines.draw(screen)
+        self.vertical_ruler.draw(screen)
+        self.horizontal_ruler.draw(screen)
 
         self.velocity_slider.draw(screen, f"Velocity = {cfg.velocity * 10} m/s")
         self.angle_slider.draw(screen, f"Angle = {cfg.angle} deg")
         self.bomb_height_slider.draw(screen, f"Drop Bomb at = {cfg.bomb_height * 10} m")
 
-        # Experimental methods
         self.plane_trajectory.draw(screen)
         self.bomb_trajectory.draw(screen)
 
-        # TODO the code below me is a mess. Clean it
         plane_x, plane_y = self.format_coords(cfg.dynamic_pos)
         self.plane_coords_text.draw(screen, f"Plane Coords = [{plane_x} m, {plane_y} m]")
         bomb_x, bomb_y = self.format_coords(cfg.bomb_pos)
@@ -72,13 +75,15 @@ class Program:
 
         self.time_text.draw(screen, f"Time = {Timer.minutes}:{Timer.seconds}:{Timer.miliseconds}")
 
-        self.play_pause_button.draw(screen)
+        self.start_button.draw(screen)
         self.reset_button.draw(screen)
+
+        # Experimental methods
 
     @staticmethod
     def format_coords(pos):
         x, y = pos
-        return int(x * 10), 4000 - int(y * 10)
+        return int(x * 10), int((400 - y) * 10)
 
 
 def main():

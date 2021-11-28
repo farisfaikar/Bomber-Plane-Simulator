@@ -53,28 +53,37 @@ class BombTrajectory:
         # Core attributes
         self.bomb = pygame.image.load('sprite/bomb.png')
         self.bomb = pygame.transform.scale(self.bomb, (20, 10))
+        self.cross = pygame.image.load('sprite/cross.png')
+        self.cross = pygame.transform.scale(self.cross, (20, 20))
 
         self.x = self.y = 0
         self.bomb_starting_pos = (0, 0)
         self.bomb_height = 400 - cfg.bomb_height
-        self.GRAVITY = 0.98  # m/s^2 = px/s^2
+        self.GRAVITY = 0.9807  # m/s^2 = px/s^2
         self.bomb_timer = Timer()
         self.bomb_angle = 0
+        self.is_bomb_landed = False
 
     def draw(self, screen):
         # Draw height line
         self.bomb_height = 400 - cfg.bomb_height
         draw_dashed_line(screen, cfg.BLUE, (0, self.bomb_height), (800, self.bomb_height))
 
+        # Draw bomb landing zone 'X'
+        if self.y >= 400 and Timer.is_timer_running:
+            self.is_bomb_landed = True
+            screen.blit(self.cross, (self.x - int(self.cross.get_width() / 2), self.y
+                                     - int(self.cross.get_height() / 2)))
+
         # Draw bomb trajectory
         self.run_logic()
-        if cfg.is_bomb_dropped:
+        if cfg.is_bomb_dropped and not self.is_bomb_landed:
             bomb_copy = pygame.transform.rotate(self.bomb, self.bomb_angle)
             screen.blit(bomb_copy, (self.x - int(bomb_copy.get_width() / 2), self.y - int(bomb_copy.get_height() / 2)))
 
     def run_logic(self):
         # Check if height is reached
-        if cfg.dynamic_pos[1] <= self.bomb_height and not cfg.is_bomb_dropped:
+        if cfg.dynamic_pos[1] <= self.bomb_height and not cfg.is_bomb_dropped and Timer.is_timer_running:
             self.bomb_starting_pos = cfg.dynamic_pos
             cfg.is_bomb_dropped = True
 
@@ -82,7 +91,7 @@ class BombTrajectory:
         x_before = self.x
         y_before = self.y
 
-        if cfg.is_bomb_dropped:
+        if cfg.is_bomb_dropped and not self.is_bomb_landed:
             self.x = cfg.dynamic_pos[0]
             y0 = self.bomb_starting_pos[1]
             time = self.bomb_timer.count() * .001
@@ -100,7 +109,9 @@ class BombTrajectory:
         # Check if timer is reset
         if not Timer.is_timer_running:
             cfg.is_bomb_dropped = False
+            self.is_bomb_landed = False
             self.bomb_timer.reset()
+            self.x = self.y = 0
 
 
 def draw_dashed_line(surface, color, start_pos, end_pos, width=1, dash_length=10, exclude_corners=True):
