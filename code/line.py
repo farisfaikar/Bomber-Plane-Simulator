@@ -6,14 +6,22 @@ import config as cfg
 from timer import Timer
 
 
-class PlaneTrajectory:
+class GroundLine:
+    def __init__(self):
+        self.y = 400
+
+    def draw(self, screen):
+        pygame.draw.line(screen, cfg.L_GREEN, (0, self.y), (800, self.y), 4)
+
+
+class PlanePathLine:
     def __init__(self):
         # Core Attributes
         cfg.angle = 40
         self.color = cfg.L_GREEN
         self.start_pos = (0, 400)
-        self.dynamic_pos = self.start_pos
 
+        self.dynamic_pos = self.start_pos
         self.plane = pygame.image.load('sprite/plane.png')
         self.plane = pygame.transform.scale(self.plane, (30, 15))
         self.dashed_line_length = 1000
@@ -41,6 +49,8 @@ class PlaneTrajectory:
 
     def run_logic(self):
         x0, y0 = self.start_pos
+        y0 = 400 - cfg.starting_height
+        self.start_pos = (x0, y0)
         time = round(Timer.dynamic_time * .001, 3)
         angle_rad = math.radians(cfg.angle)
         x1 = x0 + math.cos(angle_rad) * cfg.velocity * time
@@ -59,10 +69,12 @@ class BombTrajectory:
         self.x = self.y = 0
         self.bomb_starting_pos = (0, 0)
         self.bomb_height = 400 - cfg.bomb_height
-        self.GRAVITY = 0.9807  # m/s^2 = px/s^2
+        self.GRAVITY = .9807  # m/s^2 = px/s^2
         self.bomb_timer = Timer()
         self.bomb_angle = 0
         self.is_bomb_landed = False
+        self.is_x_recorded = False
+        self.bomb_initial_x = 0
 
     def draw(self, screen):
         # Draw height line
@@ -81,6 +93,9 @@ class BombTrajectory:
             bomb_copy = pygame.transform.rotate(self.bomb, self.bomb_angle)
             screen.blit(bomb_copy, (self.x - int(bomb_copy.get_width() / 2), self.y - int(bomb_copy.get_height() / 2)))
 
+        # Update config variables
+        cfg.is_bomb_landed = self.is_bomb_landed
+
     def run_logic(self):
         # Check if height is reached
         if cfg.dynamic_pos[1] <= self.bomb_height and not cfg.is_bomb_dropped and Timer.is_timer_running:
@@ -96,22 +111,83 @@ class BombTrajectory:
             y0 = self.bomb_starting_pos[1]
             time = self.bomb_timer.count() * .001
             angle_rad = math.radians(cfg.angle)
+            # Y position equation
             self.y = y0 - cfg.velocity * math.sin(angle_rad) * time + .5 * self.GRAVITY * time ** 2
-            # Update bomb pos
+            # Update config variables
             cfg.bomb_pos = self.x, self.y
+            cfg.bomb_travel_time = time
 
         # Run bomb dynamic angle calculation
-        x_after = self.x - x_before
-        y_after = self.y - y_before
-        bomb_angle_rad = -math.atan2(y_after, x_after)
+        cfg.x_diff = self.x - x_before
+        cfg.y_diff = self.y - y_before
+        bomb_angle_rad = -math.atan2(cfg.y_diff, cfg.x_diff)
         self.bomb_angle = math.degrees(bomb_angle_rad)
+
+        # Record bomb distance
+        if cfg.is_bomb_dropped and not self.is_x_recorded:
+            self.bomb_initial_x = self.x
+            self.is_x_recorded = True
+
+        if Timer.is_timer_running and cfg.is_bomb_dropped:
+            cfg.bomb_travel_distance = self.x - self.bomb_initial_x
 
         # Check if timer is reset
         if not Timer.is_timer_running:
+            cfg.bomb_travel_time = 0
+            cfg.bomb_travel_distance = 0
             cfg.is_bomb_dropped = False
             self.is_bomb_landed = False
+            self.is_x_recorded = False
             self.bomb_timer.reset()
             self.x = self.y = 0
+
+
+class BombTrajectoryLine:
+    def __init__(self):
+        self.color = cfg.BLUE
+        self.start_pos = []
+        self.end_pos = []
+        self.dash_amount = 0
+        self.is_appended = False
+
+    def draw(self, screen):
+        self.run_logic()
+        for i in range(self.dash_amount):
+            pygame.draw.line(screen, self.color, tuple(self.start_pos[i]), tuple(self.end_pos[i]))
+
+    def run_logic(self):
+        if cfg.is_bomb_dropped:
+            x, y = cfg.bomb_pos
+            elapsed_seconds = Timer.dynamic_time % 1000
+            if elapsed_seconds < 500 and not self.is_appended:
+                self.start_pos.append([x, y])
+                self.is_appended = True
+            elif elapsed_seconds > 500 and self.is_appended:
+                self.end_pos.append([x, y])
+                self.is_appended = False
+                self.dash_amount += 1
+        else:
+            self.dash_amount = 0
+            self.start_pos = []
+            self.end_pos = []
+            self.is_appended = False
+
+
+class BombMaxHeightLine:
+    def __init__(self):
+        self.y = 0
+
+    def draw(self, screen):
+        if cfg.is_bomb_dropped or cfg.is_bomb_landed:
+            self.check_logic()
+            draw_dashed_line(screen, cfg.RED, (0, self.y), (800, self.y))
+            # Update bomb maxima
+            cfg.bomb_maxima = self.y
+
+    def check_logic(self):
+        if cfg.y_diff < 0:
+            y = cfg.bomb_pos[1]
+            self.y = y
 
 
 def draw_dashed_line(surface, color, start_pos, end_pos, width=1, dash_length=10, exclude_corners=True):

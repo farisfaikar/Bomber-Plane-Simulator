@@ -16,8 +16,20 @@ class Timer:
         self.dynamic_time = 0
         self.is_timer_running = False
 
+    def count(self):
+        elapsed_time = pygame.time.get_ticks()
+        if not self.is_timer_running:
+            self.static_time = elapsed_time
+            self.is_timer_running = True
+        self.dynamic_time = elapsed_time - self.static_time
+        return self.dynamic_time
+
+    def reset(self):
+        self.is_timer_running = False
+        self.static_time = pygame.time.get_ticks()
+
     @classmethod
-    def count_up(cls):
+    def count_timer(cls):
         elapsed_time = pygame.time.get_ticks()
 
         if not cls.is_timer_running:
@@ -39,18 +51,6 @@ class Timer:
         cls.seconds = add_0(seconds_)
         cls.minutes = add_0(minutes_)
         cls.hours = add_0(hours_)
-
-    def count(self):
-        elapsed_time = pygame.time.get_ticks()
-        if not self.is_timer_running:
-            self.static_time = elapsed_time
-            self.is_timer_running = True
-        self.dynamic_time = elapsed_time - self.static_time
-        return self.dynamic_time
-
-    def reset(self):
-        self.is_timer_running = False
-        self.static_time = pygame.time.get_ticks()
 
     @classmethod
     def reset_timer(cls):

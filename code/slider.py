@@ -4,7 +4,7 @@ from timer import Timer
 
 
 class Slider:
-    def __init__(self, pos, length, line_color, handle_color, line_width=2, handle_radius=5):
+    def __init__(self, pos, length, line_color, handle_color, starting_percentage=.5, line_width=2, handle_radius=5):
         # Core attributes
         self.start_pos = pos
         self.length = length
@@ -20,7 +20,7 @@ class Slider:
         x, y = self.start_pos
         self.handle_obj = pygame.Rect(self.start_pos, (self.handle_radius, self.handle_radius))
         self.end_pos = (x + self.length, y)
-        self.handle_pos = (x + self.length / 2, y)
+        self.handle_pos = (x + self.length * starting_percentage, y)
 
     def draw(self, screen, text):
         self.check_click()
@@ -89,3 +89,8 @@ class AngleSlider(Slider):
 class BombHeightSlider(Slider):
     def run_logic(self):
         cfg.bomb_height = self.slider_logic(cfg.MIN_BOMB_HEIGHT, cfg.MAX_BOMB_HEIGHT)
+
+
+class StartingHeightSlider(Slider):
+    def run_logic(self):
+        cfg.starting_height = self.slider_logic(cfg.MIN_STARTING_HEIGHT, cfg.MAX_STARTING_HEIGHT)

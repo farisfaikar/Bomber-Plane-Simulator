@@ -1,6 +1,5 @@
 import pygame
-# from pygame import mixer
-import timer
+from timer import Timer
 import config as cfg
 
 
@@ -33,7 +32,7 @@ class Button:
 
         if self.button_rect.collidepoint(mouse_pos):
             self.button_color = cfg.WHITE
-            if pygame.mouse.get_pressed(num_buttons=3)[0]:
+            if pygame.mouse.get_pressed()[0]:
                 self.pressed = True
                 self.button_color = cfg.GREEN
             else:
@@ -50,11 +49,9 @@ class Button:
 
 class StartButton(Button):
     def button_action(self):
-        print("Simulation Plays")
-        timer.Timer.start_timer()
+        Timer.start_timer()
 
 
 class ResetButton(Button):
     def button_action(self):
-        print("Reset Simulation")
-        timer.Timer.reset_timer()
+        Timer.reset_timer()

@@ -14,12 +14,9 @@ class Ruler:
         self.color = cfg.GREEN
         self.increments = 0
         self.increment_length = 0
-        self.text = []
+        self.text_data = []
 
         self.ruler_logic()
-
-    def draw(self, screen):
-        pass
 
     def ruler_logic(self):
         pass
@@ -27,7 +24,7 @@ class Ruler:
 
 class VerticalRuler(Ruler):
     def draw(self, screen):
-        for i, (pos, dynamic_value) in enumerate(self.text):
+        for i, (pos, dynamic_value) in enumerate(self.text_data):
             text_obj = self.chary.render(dynamic_value, True, self.color)
             screen.blit(text_obj, pos)
 
@@ -37,7 +34,7 @@ class VerticalRuler(Ruler):
 
         for i in range(self.total_marks):
             value = int(self.starting_value)
-            self.text.append([self.pos, f"{value} m"])
+            self.text_data.append([self.pos, f"{value} m"])
 
             x, y = self.pos
             y -= self.increment_length
@@ -47,7 +44,7 @@ class VerticalRuler(Ruler):
 
 class HorizontalRuler(Ruler):
     def draw(self, screen):
-        for i, (pos, dynamic_value) in enumerate(self.text):
+        for i, (pos, dynamic_value) in enumerate(self.text_data):
             text_obj = self.chary.render(dynamic_value, True, self.color)
             x, y = pos
             x -= text_obj.get_width()
@@ -61,7 +58,7 @@ class HorizontalRuler(Ruler):
 
         for i in range(self.total_marks):
             value = int(self.starting_value)
-            self.text.append([self.pos, f"{value} m"])
+            self.text_data.append([self.pos, f"{value} m"])
 
             x, y = self.pos
             x += self.increment_length

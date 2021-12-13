@@ -4,8 +4,7 @@ import sys
 import config as cfg
 import crt as c
 import text
-import ui
-import trajectory
+import line
 import slider
 import button
 import ruler
@@ -31,17 +30,21 @@ pygame.display.set_icon(icon)
 
 class Program:
     def __init__(self):
-        self.ui_lines = ui.UILines()
-        self.plane_trajectory = trajectory.PlaneTrajectory()
-        self.bomb_trajectory = trajectory.BombTrajectory()
+        self.ui_lines = line.GroundLine()
+        self.plane_path_line = line.PlanePathLine()
+        self.bomb_trajectory = line.BombTrajectory()
+        self.bomb_max_height_line = line.BombMaxHeightLine()
+        self.bomb_trajectory_line = line.BombTrajectoryLine()
 
         self.velocity_slider = slider.VelocitySlider((110, 440), 180, cfg.GREEN, cfg.L_GREEN)
         self.angle_slider = slider.AngleSlider((310, 440), 180, cfg.GREEN, cfg.L_GREEN)
-        self.bomb_height_slider = slider.BombHeightSlider((510, 440), 180, cfg.GREEN, cfg.L_GREEN)
+        self.starting_height_slider = slider.StartingHeightSlider((110, 490), 180, cfg.GREEN, cfg.L_GREEN)
+        self.bomb_height_slider = slider.BombHeightSlider((310, 490), 180, cfg.GREEN, cfg.L_GREEN, .625)
 
-        self.bomb_coords_text = text.Text(110, 470)
-        self.plane_coords_text = text.Text(110, 450)
-        self.time_text = text.Text(410, 450)
+        self.bomb_coords_text = text.BombCoordsText(510, 410)
+        self.bomb_maxima_text = text.BombMaximaText(510, 430)
+        self.bomb_travel_time_text = text.BombTravelTimeText(510, 450)
+        self.bomb_travel_distance_text = text.BombTravelDistance(510, 470)
 
         self.start_button = button.StartButton("Start", 80, 30, (10, 410), cfg.L_GREEN)
         self.reset_button = button.ResetButton("Reset", 80, 30, (10, 460), cfg.L_GREEN)
@@ -52,38 +55,31 @@ class Program:
         # Experimental instances
 
     def run(self):
-        Timer.count_up()
+        Timer.count_timer()
 
-        self.ui_lines.draw(screen)
         self.vertical_ruler.draw(screen)
         self.horizontal_ruler.draw(screen)
 
         self.velocity_slider.draw(screen, f"Velocity = {cfg.velocity * 10} m/s")
         self.angle_slider.draw(screen, f"Angle = {cfg.angle} deg")
         self.bomb_height_slider.draw(screen, f"Drop Bomb at = {cfg.bomb_height * 10} m")
+        self.starting_height_slider.draw(screen, f"Initial Y = {cfg.starting_height * 10} m")
 
-        self.plane_trajectory.draw(screen)
+        self.ui_lines.draw(screen)
+        self.plane_path_line.draw(screen)
+        self.bomb_trajectory_line.draw(screen)
         self.bomb_trajectory.draw(screen)
-
-        plane_x, plane_y = self.format_coords(cfg.dynamic_pos)
-        self.plane_coords_text.draw(screen, f"Plane Coords = [{plane_x} m, {plane_y} m]")
-        bomb_x, bomb_y = self.format_coords(cfg.bomb_pos)
-        if cfg.is_bomb_dropped:
-            self.bomb_coords_text.draw(screen, f"Bomb Coords  = [{bomb_x} m, {bomb_y} m]")
-        else:
-            self.bomb_coords_text.draw(screen, f"Bomb Coords  = [{plane_x} m, {plane_y} m]")
-
-        self.time_text.draw(screen, f"Time = {Timer.minutes}:{Timer.seconds}:{Timer.miliseconds}")
+        self.bomb_max_height_line.draw(screen)
 
         self.start_button.draw(screen)
         self.reset_button.draw(screen)
 
-        # Experimental methods
+        self.bomb_coords_text.draw(screen)
+        self.bomb_maxima_text.draw(screen)
+        self.bomb_travel_time_text.draw(screen)
+        self.bomb_travel_distance_text.draw(screen)
 
-    @staticmethod
-    def format_coords(pos):
-        x, y = pos
-        return int(x * 10), int((400 - y) * 10)
+        # Experimental methods
 
 
 def main():
@@ -93,7 +89,7 @@ def main():
 
     while True:
         # Calculate delta time
-        dt = clock.tick(FPS) * 0.001 * TARGET_FPS
+        dt = clock.tick(FPS) * .001 * TARGET_FPS
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
